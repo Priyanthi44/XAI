@@ -99,9 +99,11 @@ h1 = histogram(valLinkedlist);
 title("DNN Distribution")
 valCounts = h1.BinCounts;
 valNames = h1.Categories;
-
+% indexes of frequency greater than 3
 idxCounts = valCounts > 3;
+%words according to those indexes
 Mofits = valNames(idxCounts);
+%identify indexes of the list of those motifs
 idxMotifs = ismember(valLinkedlist,Motifs);
 data(idxInfrequent,:) = [];
 
