@@ -165,13 +165,13 @@ if ~isempty(frequentClasses)
           RGBrd=compareSequences(rdLinkedlist,motifpos,k(i),wordlenbefore,wordlenafter,type,  [num2str(val,'%02d') '-' num2str(i,'%02d')],Len);%,RGBrd*(val/maxval));    
           % Get the resultant force
           %% TODO multiply with constant matrix to represent the difference between a-b and a-f
-          constMatrix = [1   1.1 1.2 1.3 1.4 1.5;
-                         1.1 1   1.1 1.2 1.3 1.4;
-                         1.2 1.1 1  1.1 1.2 1.3;
-                         1.3 1.2 1.1 1  1.1 1.2;
-                         1.4 1.3 1.2 1.1 1 1.1; 
-                         1.5 1.4 1.3 1.2 1.1 1];
-                     RGBrd=RGBrd*constMatrix;
+         constMatrix = [1   1.01 1.02 1.03 1.04 1.05;
+                         1.01 1   1.01 1.02 1.03 1.04;
+                         1.02 1.01 1  1.01 1.02 1.03;
+                         1.03 1.02 1.01 1  1.01 1.02;
+                         1.04 1.03 1.02 1.01 1 1.01; 
+                         1.05 1.04 1.03 1.02 1.01 1];
+                     RGBrd=RGBrd.*constMatrix;
              
           rdforce=resultantForce(RGBrd);
           if rdforce<0
@@ -184,7 +184,7 @@ if ~isempty(frequentClasses)
 
           RGBval=compareSequences(valLinkedlist,motifpos,k(i),wordlenbefore,wordlenafter,type , [num2str(val,'%02d') '-' num2str(i,'%02d')],Len);%,RGBval*(val/maxval));
            
-          RGBval=RGBval*constMatrix;
+          RGBval=RGBval.*constMatrix;
              
           valforce=resultantForce(RGBval);
           if rdforce<0
@@ -196,7 +196,7 @@ if ~isempty(frequentClasses)
       
           RGBpos=compareSequences(posLinkedlist,motifpos,k(i),wordlenbefore,wordlenafter,type,  [num2str(val,'%02d') '-' num2str(i,'%02d')],Len);%,RGBpos*(val/maxval));
            
-          RGBpos=RGBpos*constMatrix;
+          RGBpos=RGBpos.*constMatrix;
              
           posforce=resultantForce(RGBpos);
        
@@ -210,6 +210,13 @@ end
     idxMaxCounts=0;
     val=val-1;
 end
+%For curve fitting
+% valCurve=zeros(size(setResultant,1));
+% rdCurve=zeros(size(setResultant,1));
+% posCurve=zeros(size(setResultant,1));
+rdCurve=(setResultant(:,1));
+valCurve=(setResultant(:,2));
+posCurve=(setResultant(:,3));
 % image(setResultant,'CDataMapping','scaled');
 % colorbar
 % figure;
@@ -260,7 +267,92 @@ posCluster1=setResultant(idx==1,3);
 posCluster2=setResultant(idx==2,3);
  posCluster3=setResultant(idx==3,3);
 % posCluster4=setResultant(idx==4,3);
+vect=C(:,1);
+[mild,m]= max(vect);
 
+[harsh,h]=min(vect);
+modc=vect(vect~=mild & vect~=harsh);
+n=[1;2;3]
+c=n(n~=m &n~=h);
+
+    if(m==1)
+       [mildcounts, mildbins] = hist(rdCluster1);
+    elseif(m==2)
+       [mildcounts, mildbins] = hist(rdCluster2); 
+    else
+       [mildcounts, mildbins] = hist(rdCluster3); 
+    end
+    if(h==1)
+       [harshcounts, harshbins] = hist(rdCluster1);
+    elseif(h==2)
+       [harshcounts, harshbins] = hist(rdCluster2); 
+    else
+       [harshcounts, harshbins] = hist(rdCluster3); 
+    end
+     if(c==1)
+       [modcounts, modbins] = hist(rdCluster1);
+    elseif(c==2)
+       [modcounts, modbins] = hist(rdCluster2); 
+    else
+       [modcounts, modbins] = hist(rdCluster3); 
+    end
+
+counts=[mildcounts,harshcounts,modcounts];
+bins=[mildbins,harshbins,modbins];
+figure;
+% pd = fitdist(counts','Normal');
+% y=pdf(pd,bins);
+gaussEqn = 'a*exp(-((x-b)/c)^2)+d';
+
+exclude2 = counts >50;
+startPoints = [-4 -1.22 0 0.6]
+f1=fit(bins',counts',gaussEqn, 'Exclude', exclude2);
+plot(f1,bins,counts);
+legend('Environment','Distribution','Location','NorthEast');
+vect=C(:,2);
+[mild,m]= max(vect);
+
+[harsh,h]=min(vect);
+modc=vect(vect~=mild & vect~=harsh);
+n=[1;2;3];
+c=n(n~=m &n~=h);
+
+    if(m==1)
+       [mildcounts, mildbins] = hist(valCluster1);
+    elseif(m==2)
+       [mildcounts, mildbins] = hist(valCluster2); 
+    else
+       [mildcounts, mildbins] = hist(valCluster3); 
+    end
+    if(h==1)
+       [harshcounts, harshbins] = hist(valCluster1);
+    elseif(h==2)
+       [harshcounts, harshbins] = hist(valCluster2); 
+    else
+       [harshcounts, harshbins] = hist(valCluster3); 
+    end
+     if(c==1)
+       [modcounts, modbins] = hist(valCluster1);
+    elseif(c==2)
+       [modcounts, modbins] = hist(valCluster2); 
+    else
+       [modcounts, modbins] = hist(valCluster3); 
+    end
+
+counts=[mildcounts,harshcounts,modcounts];
+bins=[mildbins,harshbins,modbins];
+% pd = fitdist(counts','Normal');
+% y=pdf(pd,bins);
+gaussEqn = 'a*exp(-((x-b)/c)^2)+d';
+
+startPoints = [ 1.5000  900.0000   10.0000    0.6000]
+f1=fit(bins',counts',gaussEqn,'Start', startPoints, 'Exclude', exclude2    );
+figure;
+plot(f1,bins,counts);
+% f1=fit(bins',counts',gaussEqn);
+% plot(f1,bins,counts);
+legend('DNN Response','Distribution','Location','NorthEast');
+hold off;
 
 c1Spread= sqrt((rdCluster1-C(1,1)).^2+(valCluster1-C(1,2)).^2+(posCluster1-C(1,3)).^2);
 c2Spread= sqrt((rdCluster2-C(2,1)).^2+(valCluster2-C(2,2)).^2+(posCluster2-C(2,3)).^2);
@@ -274,6 +366,7 @@ c1std=std(c1Spread);
 c2std=std(c2Spread);
  c3std=std(c3Spread);
 % c4std=std(c4Spread);
+
 
 figure;
 plot3(setResultant(idx==1,1),setResultant(idx==1,2),setResultant(idx==1,3),'r.','MarkerSize',12)
